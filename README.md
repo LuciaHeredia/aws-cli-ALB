@@ -4,6 +4,17 @@ This is a guide for creating an **AWS CLI script** that automates the deployment
 The instances will run a basic web server with HTML content. 
 
 # Steps:
+### Connecting AWS:
+  ```
+  $ aws configure
+  ```
+  Login with IAM user credentials (access/secret key) and configure region id (can be found beside the region name in your AWS account):
+  ```
+  AWS Access Key ID [None]: accesskey
+  AWS Secret Access Key [None]: secretkey
+  Default region name [None]: us-west-2
+  Default output format [None]:
+  ```
 ### Step 1:  Creating a Security Group:
 * TODO: associated SG with the **EC2 instances**, Allow *inbound traffic* on *port 80 (HTTP)*.
 ### Step 2:  Creating a Load Balancer:

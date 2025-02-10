@@ -1,5 +1,5 @@
 # Introduction:
-This is a guide for creating an **AWS CLI script** that automates the deployment of an **Application Load Balancer (ALB)** on **AWS**. \
+This is a guide for creating an **AWS CLI script** that automates the deployment of an **Application Load Balancer (ALB)**. \
 **ALB** will be configured with 2 **Target Groups**, each associated with a different **EC2** instance. \
 The instances will run a basic web server with HTML content. 
 

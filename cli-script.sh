@@ -1,14 +1,15 @@
 #!/bin/bash
+source config.conf
 
 ######################## Variables ########################
-REGION="us-east-1"
+REGION=$REGION
 AMAZON_LINUX_2_AMI_ID="ami-00f251754ac5da7f0"
 AMI_ID=$(aws ec2 describe-images --region "$REGION" --owners amazon \
 	--filters "Name=name,Values=amzn2-ami-hvm-*-x86_64-gp2" \
 	--query 'Images | [0].ImageId' --output text)
-VPC_ID="vpc-0972501efe359a4ce"
-SUBNET_ID_1="subnet-031215afa3e7c2aa6"
-SUBNET_ID_2="subnet-0fa6439bbb687acf1"
+VPC_ID=$VPC_ID
+SUBNET_ID_1=$SUBNET_ID_1
+SUBNET_ID_2=$SUBNET_ID_2
 RANDOM_STR=$(head /dev/urandom | tr -dc 'a-zA-Z0-9' | head -c 10)
 SG_NAME="aws6-sg-$RANDOM_STR"
 ALB_NAME="aws6-alb-$RANDOM_STR"

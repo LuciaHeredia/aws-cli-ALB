@@ -12,7 +12,7 @@ TG_NAME_RED="/red"
 TG_NAME_BLUE="/blue"
 
 ######################## 1. Security Group ########################
-# • Allow inbound traffic on port 80 (HTTP) and secure connection on port 22(SSH). #
+# • Allow inbound traffic on port 80 (HTTP). #
 # • When creating EC2 instances, associated this Security Group with them. #
 
 echo "1. Creating security group..."
@@ -24,15 +24,24 @@ SG_ID=$(aws ec2 create-security-group \
 aws ec2 authorize-security-group-ingress \
 	--group-id "$SG_ID" \
 	--protocol tcp --port 80 --cidr 0.0.0.0/0
-aws ec2 authorize-security-group-ingress \
-	--group-id "$SG_ID" \
-    --protocol tcp --port 22 --cidr 0.0.0.0/0
 
-######################## 2. Target Groups ########################
+######################## 2. Application Load Balancer(ALB) ########################
+# • Create ALB with a unique name. #
+# • Use two subnets, one for each Availability Zone. #
+# • Associate SG with ALB. #
+
+echo "2. Creating Application Load Balancer..."
+ALB_ARN=$(aws elbv2 create-load-balancer \
+	--name "$ALB_NAME" \
+	--security-groups "$SG_ID" \
+	--subnets "$SUBNET_ID_1" "$SUBNET_ID_2" \
+	--query 'LoadBalancers[0].LoadBalancerArn' --output text)
+
+######################## 3. Target Groups ########################
 # • Create 2 target groups: "/red" & "/blue" path. #
 # • Configure each to use HTTP on port 80. #
 
-echo "2. Creating 2 Target Groups..."
+echo "3. Creating 2 Target Groups..."
 TG_ARN_RED=$(aws elbv2 create-target-group \
 	--name "$TG_NAME_RED" \
 	--protocol HTTP --port 80 \
@@ -46,7 +55,7 @@ TG_ARN_BLUE=$(aws elbv2 create-target-group \
 	--target-type ip \
 	--query 'TargetGroups[1].TargetGroupArn' --output text)
 
-######################## 3. EC2 Instances ########################
+######################## 4. EC2 Instances ########################
 # • Launch 2 EC2 instances. #
 # • Associate SGs with the instances. #
 # • Install & configure Apache on each instance. #
@@ -54,48 +63,34 @@ TG_ARN_BLUE=$(aws elbv2 create-target-group \
 
 echo "4. Launching EC2 instances..."
 INSTANCE_ID_RED=$(aws ec2 run-instances \
-	--region "$REGION" --image-id "$AMI_ID" --count 1 --instance-type t2.micro \
+	--image-id "$AMI_ID" --count 1 --instance-type t2.micro \
 	--security-group-id "$SG_ID" --subnet-id "$SUBNET_ID_1" \
 	--tag-specifications 'ResourceType=instance,Tags=[{Key=Name,Value=red}]' \
 	--user-data file://"$USER_DATA_RED" )
 
 INSTANCE_ID_BLUE=$(aws ec2 run-instances \
-	--region "$REGION" --image-id "$AMI_ID" --count 1 --instance-type t2.micro \
+	--image-id "$AMI_ID" --count 1 --instance-type t2.micro \
     --security-group-id "$SG_ID" --subnet-id "$SUBNET_ID_2" \
 	--tag-specifications 'ResourceType=instance,Tags=[{Key=Name,Value=blue}]' \
 	--user-data file://"$USER_DATA_BLUE" )
 
-echo "waiting 60 seconds for instances to run"
-sleep 60
+echo "waiting for instances to run.."
+aws ec2 wait instance-running --instance-ids $INSTANCE_ID
 
-: << 'COMMENT'
-TG_ARN_RED="a"
-TG_ARN_BLUE="a"
-INSTANCE_ID_RED="i-"
-INSTANCE_ID_BLUE="i-"
-ALB_ARN="a"
-
-######################## 4. Register Targets ########################
+######################## 5. Register Targets ########################
 # • Register each EC2 instance with its corresponding target group. #
 
-echo "4. Registering EC2 instances with Target Groups..."
-aws elbv2 register-targets --region "$REGION" --target-group-arn "$TG_ARN_RED" --targets Id="$INSTANCE_ID_RED"
-aws elbv2 register-targets --region "$REGION" --target-group-arn "$TG_ARN_BLUE" --targets Id="$INSTANCE_ID_BLUE"
-
-######################## 5. Application Load Balancer(ALB) ########################
-# • Create ALB with a unique name. #
-# • Use two subnets, one for each Availability Zone. #
-# • Associate SGs with ALB. #
-
-echo "5. Creating Application Load Balancer..."
-ALB_ARN=$(aws elbv2 create-load-balancer --name "$ALB_NAME" \
-	--subnets "$SUBNET_ID_1" "$SUBNET_ID_2" --security-groups "$SG_ID" \
-	--query 'LoadBalancers[0].LoadBalancerArn' --output text)
+echo "5. Registering EC2 instances with Target Groups..."
+aws elbv2 register-targets \
+	--target-group-arn "$TG_ARN_RED" --targets Id="$INSTANCE_ID_RED"
+aws elbv2 register-targets \
+	--target-group-arn "$TG_ARN_BLUE" --targets Id="$INSTANCE_ID_BLUE"
 
 ######################## 6. Listeners ########################
 # • Create listeners on the ALB, for "/red" & "/blue" path. #
 # • Associate each listener with the respective Target Group. #
 
+: << 'COMMENT'
 echo "Creating listeners..."
 aws elbv2 create-listener \
 	--load-balancer-arn "$ALB_ARN" \

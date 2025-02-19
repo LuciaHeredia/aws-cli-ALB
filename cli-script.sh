@@ -25,7 +25,6 @@ SG_ID=$(aws ec2 create-security-group \
 aws ec2 authorize-security-group-ingress \
 	--group-id "$SG_ID" \
 	--protocol tcp --port 80 --cidr 0.0.0.0/0
-
 echo "SG_ID=$SG_ID" > $TEMPORARY_VARS_FILE
 
 ######################## 2. Application Load Balancer(ALB) ########################
@@ -39,6 +38,7 @@ ALB_ARN=$(aws elbv2 create-load-balancer \
 	--security-groups "$SG_ID" \
 	--subnets "$SUBNET_ID_1" "$SUBNET_ID_2" \
 	--query 'LoadBalancers[0].LoadBalancerArn' --output text)
+echo "ALB_ARN=$ALB_ARN" >> $TEMPORARY_VARS_FILE
 
 ######################## 3. Target Groups ########################
 # • Create 2 target groups: "/red" & "/blue" path. #
@@ -51,12 +51,15 @@ TG_ARN_RED=$(aws elbv2 create-target-group \
 	--vpc-id "$VPC_ID" \
 	--target-type ip \
 	--query 'TargetGroups[0].TargetGroupArn' --output text)
+echo "TG_ARN_RED=$TG_ARN_RED" >> $TEMPORARY_VARS_FILE
+
 TG_ARN_BLUE=$(aws elbv2 create-target-group \
 	--name "$TG_NAME_BLUE" \
 	--protocol HTTP --port 80 \
 	--vpc-id "$VPC_ID" \
 	--target-type ip \
-	--query 'TargetGroups[1].TargetGroupArn' --output text)
+	--query 'TargetGroups[0].TargetGroupArn' --output text)
+echo "TG_ARN_BLUE=$TG_ARN_BLUE" >> $TEMPORARY_VARS_FILE
 
 ######################## 4. EC2 Instances ########################
 # • Launch 2 EC2 instances. #
@@ -70,15 +73,20 @@ INSTANCE_ID_RED=$(aws ec2 run-instances \
 	--security-group-id "$SG_ID" --subnet-id "$SUBNET_ID_1" \
 	--tag-specifications 'ResourceType=instance,Tags=[{Key=Name,Value=red}]' \
 	--user-data file://"$USER_DATA_RED" )
+echo "INSTANCE_ID_RED=$INSTANCE_ID_RED" >> $TEMPORARY_VARS_FILE
 
 INSTANCE_ID_BLUE=$(aws ec2 run-instances \
 	--image-id "$AMI_ID" --count 1 --instance-type t2.micro \
     --security-group-id "$SG_ID" --subnet-id "$SUBNET_ID_2" \
 	--tag-specifications 'ResourceType=instance,Tags=[{Key=Name,Value=blue}]' \
 	--user-data file://"$USER_DATA_BLUE" )
+echo "INSTANCE_ID_BLUE=$INSTANCE_ID_BLUE" >> $TEMPORARY_VARS_FILE
 
+# TODO: see how to get instance id!!!!
+
+: << 'COMMENT'
 echo "waiting for instances to run.."
-aws ec2 wait instance-running --instance-ids $INSTANCE_ID
+aws ec2 wait instance-running --instance-ids $INSTANCE_ID # dont work!!!
 
 ######################## 5. Register Targets ########################
 # • Register each EC2 instance with its corresponding target group. #
@@ -92,7 +100,7 @@ aws elbv2 register-targets \
 ######################## 6. Listeners ########################
 # • Create listeners on the ALB, for "/red" & "/blue" path. #
 # • Associate each listener with the respective Target Group. #
-: << 'COMMENT'
+
 echo "Creating listeners..."
 aws elbv2 create-listener \
 	--load-balancer-arn "$ALB_ARN" \

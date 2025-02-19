@@ -2,7 +2,6 @@
 This is a guide for creating an **AWS CLI script** that automates the deployment of an **Application Load Balancer (ALB)**. \
 **ALB** will be configured with 2 **Target Groups**, each associated with a different **EC2 instance**. \
 The **instances** will run a basic *web server with HTML content*, each **instance** with a different *path* to distinguish between them. \
-> [!IMPORTANT] \
 > I will be using the *default VPC of the region*, along with *2 default public subnets* each in a different *availability zone*.
 
 # AWS Architecture Diagram :

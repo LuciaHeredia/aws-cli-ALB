@@ -8,8 +8,9 @@ SG_NAME="aws6-sg-$RANDOM_STR"
 ALB_NAME="aws6-alb-$RANDOM_STR"
 USER_DATA_RED="ApacheServerHTML_red.sh"
 USER_DATA_BLUE="ApacheServerHTML_blue.sh"
-TG_NAME_RED="/red"
-TG_NAME_BLUE="/blue"
+TG_NAME_RED="red"
+TG_NAME_BLUE="blue"
+TEMPORARY_VARS_FILE="temp.conf"
 
 ######################## 1. Security Group ########################
 # • Allow inbound traffic on port 80 (HTTP). #
@@ -24,6 +25,8 @@ SG_ID=$(aws ec2 create-security-group \
 aws ec2 authorize-security-group-ingress \
 	--group-id "$SG_ID" \
 	--protocol tcp --port 80 --cidr 0.0.0.0/0
+
+echo "SG_ID=$SG_ID" > $TEMPORARY_VARS_FILE
 
 ######################## 2. Application Load Balancer(ALB) ########################
 # • Create ALB with a unique name. #
@@ -89,7 +92,6 @@ aws elbv2 register-targets \
 ######################## 6. Listeners ########################
 # • Create listeners on the ALB, for "/red" & "/blue" path. #
 # • Associate each listener with the respective Target Group. #
-
 : << 'COMMENT'
 echo "Creating listeners..."
 aws elbv2 create-listener \

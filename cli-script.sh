@@ -110,7 +110,7 @@ echo "6. Creating listener and rules..."
 LISTENER_ARN=$(aws elbv2 create-listener \
 	--load-balancer-arn "$ALB_ARN" \
 	--protocol HTTP --port 80 \
-    --default-actions Type=forward,TargetGroupArn="$TG_ARN_RED"
+    --default-actions Type=forward,TargetGroupArn="$TG_ARN_RED" \
 	--query 'Listeners[*].ListenerArn' --output text )
 echo "LISTENER_ARN=$LISTENER_ARN" >> $TEMPORARY_VARS_FILE
 aws elbv2 create-rule \

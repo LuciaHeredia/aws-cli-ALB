@@ -20,20 +20,22 @@ The **instances** will run a basic *web server with HTML content*, each **instan
   Default output format [None]:
   ```
 ### Step 1:  Creating a Security Group:
-  * Allow *inbound traffic* on *port 80 (HTTP)*.
-  * When creating  **EC2 instances**, associated this **security group** with them. 
+* Allow *inbound traffic* on *port 80 (HTTP)*.
+* When creating  **EC2 instances**, associated this **security group** with them. 
 ### Step 2:  Creating a Load Balancer:
 * Create an **Application Load Balancer (ALB)**.
 * Configure the **ALB** to use **2 public subnets**, one for each **availability zone**.
 * Associate the previously created **security group** with the **ALB**.
 ### Step 3:  Creating 2 Target Groups:
-  * Create **2 target groups**, one for the *"/red" path* and the other for the *"/blue" path*, configure each **target group** to use *HTTP on port 80*.
+* Create **2 target groups**, one for the *"/red" path* and the other for the *"/blue" path*, configure each **target group** to use *HTTP on port 80*.
 ### Step 4:  Creating 2 EC2 Instances:
 * Launch **2 EC2 instances**, one for each **target group**.
 * Associate the previously created **security group** with the **instances**.
 * Install and configure *Ubuntu Server* on each *instance*.
 * Create an *HTML file* on each instance ("/var/www/html/index.html") with content indicating the color associated with the instance ("/red" or "/blue").
-### Step 5:  Register each EC2 instance with its corresponding Target Group.
+### Step 5:  Register EC2 instances with Target Groups
+* Register each EC2 instance with its corresponding Target Group.
+* Make sure the instances are in a running state.
 ### Step 6:  Creating 2 Listeners:
 * TODO: Create two listeners on the ALB, one for the "/red" path and the other for the "/blue" path.
 * TODO: Associate each listener with the respective target group.

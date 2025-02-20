@@ -101,19 +101,26 @@ aws elbv2 register-targets \
 aws elbv2 register-targets \
 	--target-group-arn "$TG_ARN_BLUE" --targets Id="$INSTANCE_ID_BLUE"
 
-: << 'COMMENT'
 ######################## 6. Listeners ########################
-# • Create listeners on the ALB, for "/red" & "/blue" path. #
-# • Associate each listener with the respective Target Group. #
+# • Create listener on the ALB with rules for "/red" & "/blue" path. #
+# • Associate each rule with the respective Target Group. #
 
-echo "Creating listeners..."
-aws elbv2 create-listener \
+<< 'COMMENT'
+echo "6. Creating listener and rules..."
+LISTENER_ARN=$(aws elbv2 create-listener \
 	--load-balancer-arn "$ALB_ARN" \
 	--protocol HTTP --port 80 \
-	--default-actions '[{"Type": "forward", "Order": 1, "ForwardConfig": {"TargetGroups": [ {"TargetGroupArn": "\'${TG_ARN_RED}\'", "Weight": 50}, {"TargetGroupArn": "\'${TG_ARN_BLUE}\'", "Weight": 50} ] } }]' \
-  --query 'Listeners[].ListenerArn' \
-  --output text)
-
+    --default-actions Type=forward,TargetGroupArn="$TG_ARN_RED"
+	--query 'Listeners[*].ListenerArn' --output text )
+echo "LISTENER_ARN=$LISTENER_ARN" >> $TEMPORARY_VARS_FILE
+aws elbv2 create-rule \
+    --listener-arn "$LISTENER_ARN" \
+    --conditions Field=path-pattern,Values="/$RED_NAME" \
+    --actions Type=forward,TargetGroupArn="$TG_ARN_RED"
+aws elbv2 create-rule \
+    --listener-arn "$LISTENER_ARN" \
+    --conditions Field=path-pattern,Values="/$BLUE_NAME" \
+    --actions Type=forward,TargetGroupArn="$TG_ARN_BLUE"
 COMMENT
 
 echo "Deployment complete"

@@ -37,8 +37,8 @@ The **instances** will run a basic *web server with HTML content*, each **instan
 * Register each EC2 instance with its corresponding Target Group.
 * Make sure the instances are in a running state.
 ### Step 6:  Creating 2 Listeners:
-* TODO: Create two listeners on the ALB, one for the "/red" path and the other for the "/blue" path.
-* TODO: Associate each listener with the respective target group.
+* Create a **Listener** on the **Application Load Balancer (ALB)** with **rules** for "/red" & "/blue" path.
+* Associate each **rule** with the respective **target group**.
 ### Last:  Easy destroy all:
 * Create a *temp.conf* file, here we store the variables(*ID*, *ARN*) created from our main file.
 * Create a *destroy.sh* file, here we delete all we have created in the AWS Cloud.

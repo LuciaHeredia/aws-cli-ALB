@@ -4,8 +4,8 @@ This is a guide for creating an **AWS CLI script** that automates the deployment
 The **instances** will run a basic *web server with HTML content*, each **instance** with a different *path* to distinguish between them. 
 > I will be using the *default VPC of the region*, along with *2 default public subnets* each in a different *availability zone*.
 
-> Before running the scripts:  ``` ./example-script.sh ``` , \
-give them permission to execute:  ``` chmod +x example-script.sh ```
+> Before running the scripts:  ``` $ ./example-script.sh ``` , \
+give them permission to execute:  ``` $ chmod +x example-script.sh ```
 
 # AWS Architecture Diagram :
 <img src="pictures-README/EC2NetworkLoadBalancer.png" width="700"/> <br/>

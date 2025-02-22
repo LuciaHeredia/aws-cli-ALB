@@ -4,6 +4,9 @@ This is a guide for creating an **AWS CLI script** that automates the deployment
 The **instances** will run a basic *web server with HTML content*, each **instance** with a different *path* to distinguish between them. 
 > I will be using the *default VPC of the region*, along with *2 default public subnets* each in a different *availability zone*.
 
+> Before running the scripts:  ``` ./example-script.sh ``` , \
+give them permission to execute:  ``` chmod +x example-script.sh ```
+
 # AWS Architecture Diagram :
 <img src="pictures-README/EC2NetworkLoadBalancer.png" width="700"/> <br/>
 
@@ -41,4 +44,4 @@ The **instances** will run a basic *web server with HTML content*, each **instan
 * Associate each **rule** with the respective **target group**.
 ### Last:  Easy destroy all:
 * Create a *temp.conf* file, here we store the variables(*ID*, *ARN*) created from our main file.
-* Create a *destroy.sh* file, here we delete all we have created in the AWS Cloud.
+* Create a *destroy-script.sh* file, here we delete all we have created in the AWS Cloud.

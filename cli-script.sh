@@ -53,6 +53,7 @@ TG_ARN_RED=$(aws elbv2 create-target-group \
 	--vpc-id "$VPC_ID" \
 	--target-type instance \
 	--health-check-path "/$RED_NAME" \
+	--health-check-protocol HTTP \
 	--query 'TargetGroups[0].TargetGroupArn' --output text)
 echo "TG_ARN_RED=$TG_ARN_RED" >> $TEMPORARY_VARS_FILE
 
@@ -62,6 +63,7 @@ TG_ARN_BLUE=$(aws elbv2 create-target-group \
 	--vpc-id "$VPC_ID" \
 	--target-type instance \
 	--health-check-path "/$BLUE_NAME" \
+	--health-check-protocol HTTP \
 	--query 'TargetGroups[0].TargetGroupArn' --output text)
 echo "TG_ARN_BLUE=$TG_ARN_BLUE" >> $TEMPORARY_VARS_FILE
 
@@ -103,30 +105,30 @@ aws elbv2 register-targets \
 aws elbv2 register-targets \
 	--target-group-arn "$TG_ARN_BLUE" --targets Id="$INSTANCE_ID_BLUE"
 
-
 ######################## 6. Listeners ########################
 # • Create listener on the ALB with rules for "/red" & "/blue" path. #
 # • Associate each rule with the respective Target Group. #
 
-<< 'COMMENT'
 echo "6. Creating listener and rules..."
 LISTENER_ARN=$(aws elbv2 create-listener \
 	--load-balancer-arn "$ALB_ARN" \
 	--protocol HTTP --port 80 \
-	--default-actions '[{"Type": "forward", "Order": 1, "ForwardConfig": {"TargetGroups": [{"TargetGroupArn": "'"$TG_ARN_RED"'", "Weight": 50}, {"TargetGroupArn": "'"$TG_ARN_BLUE"'", "Weight": 50}]}}]' \
+	--default-actions Type=forward,TargetGroupArn=$TG_ARN_RED \
 	--query 'Listeners[*].ListenerArn' --output text )
 echo "LISTENER_ARN=$LISTENER_ARN" >> $TEMPORARY_VARS_FILE
 
 aws elbv2 create-rule \
     --listener-arn "$LISTENER_ARN" \
-	--priority 3 \
-    --conditions Field=path-pattern,Values="/*" \
+	--priority 20 \
+    --conditions Field=path-pattern,Values="/$RED_NAME/*" \
     --actions Type=forward,TargetGroupArn=$TG_ARN_RED
 aws elbv2 create-rule \
     --listener-arn "$LISTENER_ARN" \
-	--priority 4 \
-    --conditions Field=path-pattern,Values="/*" \
+	--priority 10 \
+    --conditions Field=path-pattern,Values="/$BLUE_NAME/*" \
     --actions Type=forward,TargetGroupArn=$TG_ARN_BLUE
+
+<< 'COMMENT'
 COMMENT
 
 echo "Deployment complete"

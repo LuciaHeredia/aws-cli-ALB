@@ -8,6 +8,7 @@ The **instances** will run a basic *web server with HTML content*, each **instan
 give them permission to execute:  ``` $ chmod +x example-script.sh ```
 
 # AWS Architecture Diagram :
+<img src="pictures-README/lb.png" width="700"/> <br/>
 
 # Steps:
 ### First:  Connecting AWS:
